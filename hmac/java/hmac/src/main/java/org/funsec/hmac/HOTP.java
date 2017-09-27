@@ -57,44 +57,6 @@ public class HOTP {
         return sNum % DIGITS_POWER[digit];
     }
 
-    static public String generateOTP(byte[] secret,
-                                     long movingFactor,
-                                     int codeDigits,
-                                     boolean addChecksum,
-                                     int truncationOffset)
-            throws NoSuchAlgorithmException, InvalidKeyException
-    {
-        // put movingFactor value into text byte array
-        String result = null;
-        int digits = codeDigits;
-
-        // compute hmac hash
-        byte[] hash = hash(secret, movingFactor);
-
-        // put selected bytes into result int
-        int offset = hash[hash.length - 1] & 0xf;
-        if ( (0<=truncationOffset) &&
-                (truncationOffset<(hash.length-4)) ) {
-            offset = truncationOffset;
-        }
-        int binary =
-                ((hash[offset] & 0x7f) << 24)
-                        | ((hash[offset + 1] & 0xff) << 16)
-                        | ((hash[offset + 2] & 0xff) << 8)
-
-            | (hash[offset + 3] & 0xff);
-
-        System.out.println("REF: offset " + offset + " binary " + binary + " counter " + movingFactor);
-
-        int otp = binary % DIGITS_POWER[codeDigits];
-        System.out.println("REF: otp: " + otp);
-        result = Integer.toString(otp);
-        while (result.length() < digits) {
-            result = "0" + result;
-        }
-        return result;
-    }
-
     /**
      * Changes from the original reference implementation:
      */
