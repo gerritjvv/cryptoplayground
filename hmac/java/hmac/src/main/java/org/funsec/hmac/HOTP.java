@@ -75,8 +75,6 @@ public class HOTP {
                 ((hs[offset + 2] & 0xFF) << 8) |
                 (hs[offset + 3] & 0xFF);
 
-        System.out.println("Custom offset: " + offset + " binary " + binary);
-
         //see https://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html
         return binary;
     }
