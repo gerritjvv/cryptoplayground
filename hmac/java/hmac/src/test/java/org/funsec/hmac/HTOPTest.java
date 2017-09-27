@@ -25,6 +25,10 @@ public class HTOPTest {
                     {9, "1637409809a679dc698207310c8c7fc07290d9e5"}
             };
 
+    /**
+     * The reference test values do not match the reference test implementation, except for count=0.
+     * The values are included here to demonstrate that. See refTest.
+     */
     private static final Object[][] TEST_ORIGINAL_DATA_HOTP_VALUES =
             {
                     //details for each count the truncated values (both in
@@ -42,6 +46,9 @@ public class HTOPTest {
                     {9, "2679dc69", 645520489, 520489}
             };
 
+    /**
+     * These are the actual values output by the HTOPRef reference implementation.
+     */
     public static final Object[][] TEST_DATA_HOTP_VALUES =
             {
                     {0, 755224},

@@ -9,6 +9,14 @@ import java.security.NoSuchAlgorithmException;
  * Generate HOTP values based on:
  * RFC: https://www.ietf.org/rfc/rfc4226.txt
  * https://docs.oracle.com/javase/7/docs/api/javax/crypto/Mac.html
+ * <p/>
+ * Modifications:<br/>
+ * Moving factor or Counter is always a 32bit Java int value even if the reference implementation uses a long.<br/>
+ * The return value of otp is 32bit Java int and not a String, padding for display of the digits is not part of the <br/>
+ * algorithm and its more important to stress with types that the output value is always 32bits, no matter what digits were given.<br/>
+ * <p/>
+ * Digit size: Digits is by default 6, and can only be 0 ... 8 inclusively.
+ * truncationOffset: The truncation offset by default is 0, if larger than 15, dyanamic truncation is used.<br/>
  */
 public class HOTP {
 
@@ -42,6 +50,7 @@ public class HOTP {
     }
 
     protected static int truncate(byte[] hs, int digit, int truncationOffset) {
+        assert digit > -1 && digit < DIGITS_POWER.length;
 
         int sNum = dynamicTruncation(hs, truncationOffset);
 
