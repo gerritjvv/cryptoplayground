@@ -1,18 +1,24 @@
 package org.funsec.hmac;
 
-import java.io.Console;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import sun.security.jca.Providers;
+
+import javax.crypto.Mac;
+import java.io.*;
+import java.security.*;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.TemporalAmount;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class TOTPApp {
 
     private static Console console = System.console();
 
-    public static void main(String[] args) throws Throwable{
+    public static void main(String[] args) throws Throwable {
 
         Map<String, Object> opts = argumentsAsMap(args);
 
@@ -23,6 +29,9 @@ public class TOTPApp {
             } else if (opts.get("client") != null) {
                 runClient(readSecret());
                 System.exit(0);
+            } else if (opts.get("plotdata") != null) {
+                runPlotData();
+                System.exit(0);
             } else {
                 printHelp();
                 System.exit(-1);
@@ -31,6 +40,74 @@ public class TOTPApp {
             System.out.println(rte.getMessage());
             System.exit(-1);
         }
+    }
+
+    private static void runPlotData() throws NoSuchAlgorithmException, InvalidKeyException, InterruptedException, IOException {
+
+        final int iterations = 10000;
+
+        writeOutput("/tmp/hotp_securerandom_i1000_" + System.currentTimeMillis() + ".csv",
+                (writer) -> {
+
+                    SecureRandom random = new SecureRandom();
+
+                    for (int i = 0; i < iterations; i++) {
+                        try {
+                            writer.write(String.valueOf(random.nextInt()));
+                            writer.write('\n');
+
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+
+        final long baseTime = System.currentTimeMillis();
+
+        Function<String, Consumer<Writer>> otpFn = (algo) ->
+                (Writer writer) -> {
+
+                    byte[] secret = "1234567890".getBytes();
+
+
+                    long currentTime = baseTime;
+                    long seconds30InMills = 30L * 1000L;
+
+                    for (int i = 0; i < iterations; i++) {
+                        try {
+                            int totp = HOTP.otp(secret,
+                                    Math.floorDiv(Math.floorDiv(currentTime, 1000), 30),
+                                    6,
+                                    HOTP.SHA_1,
+                                    -1);
+
+                            currentTime += seconds30InMills;
+
+                            writer.write(String.valueOf(totp));
+                            writer.write('\n');
+
+                        } catch (Throwable e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                };
+
+
+        writeOutput("/tmp/hotp_totpsha1_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(HOTP.SHA_1));
+        writeOutput("/tmp/hotp_totpsha256_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(HOTP.SHA_256));
+        writeOutput("/tmp/hotp_totpsha512_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(HOTP.SHA_512));
+
+
+    }
+
+    private static void writeOutput(String filePath, Consumer<Writer> cl) throws IOException {
+        File file = new File(filePath);
+        file.createNewFile();
+
+        try (FileWriter writer = new FileWriter(file)) {
+            cl.accept(writer);
+        }
+
     }
 
     private static HOTP readAlgo() {
@@ -47,7 +124,7 @@ public class TOTPApp {
 
         final String algo;
 
-        switch (n){
+        switch (n) {
             case 0:
                 algo = HOTP.SHA_1;
                 System.out.println("Using SHA1");
@@ -93,7 +170,7 @@ public class TOTPApp {
             throw new RuntimeException("A valid token was not entered and must be 6 characters long");
         }
 
-        while(token.startsWith("0")) {
+        while (token.startsWith("0")) {
             token = token.substring(1, token.length());
         }
 
@@ -104,13 +181,13 @@ public class TOTPApp {
 
         HOTP hotp = readAlgo();
 
-        while(!Thread.interrupted()) {
+        while (!Thread.interrupted()) {
 
             //this calc ensures we start at the 30 second boundaries
-            int drift = (int)Math.floorMod(Instant.now().getEpochSecond(), 30L);
+            int drift = (int) Math.floorMod(Instant.now().getEpochSecond(), 30L);
             int cnt = (30 - drift);
 
-            for(int i = 0; i < cnt; i++) {
+            for (int i = 0; i < cnt; i++) {
 
                 int token = hotp.calcOtp(secret);
 
@@ -118,7 +195,7 @@ public class TOTPApp {
                 System.out.print("                                                   ");
                 System.out.print('\r');
                 System.out.print(String.format("%06d", token));
-                System.out.print("  [ " + (cnt-(i+1)) + " ]");
+                System.out.print("  [ " + (cnt - (i + 1)) + " ]");
                 System.out.flush();
 
                 Thread.sleep(1000);
@@ -137,7 +214,7 @@ public class TOTPApp {
             int token = readToken();
             int serverToken = hotp.calcOtp(secret);
 
-            if(token != serverToken) {
+            if (token != serverToken) {
                 throw new RuntimeException(serverToken + " does not match entered token " + token);
             }
 
