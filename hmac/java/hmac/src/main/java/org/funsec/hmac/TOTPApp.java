@@ -64,10 +64,11 @@ public class TOTPApp {
 
         final long baseTime = System.currentTimeMillis();
 
-        Function<String, Consumer<Writer>> otpFn = (algo) ->
+        Function<Object[], Consumer<Writer>> otpFn = (Object[] args) ->
                 (Writer writer) -> {
 
-                    byte[] secret = "1234567890".getBytes();
+                    byte[] secret = (byte[]) args[0];
+                    String algo = (String) args[1];
 
 
                     long currentTime = baseTime;
@@ -78,7 +79,7 @@ public class TOTPApp {
                             int totp = HOTP.otp(secret,
                                     Math.floorDiv(Math.floorDiv(currentTime, 1000), 30),
                                     6,
-                                    HOTP.SHA_1,
+                                    algo,
                                     -1);
 
                             currentTime += seconds30InMills;
@@ -92,11 +93,17 @@ public class TOTPApp {
                     }
                 };
 
+        byte[] secret = "1234567890".getBytes();
 
-        writeOutput("/tmp/hotp_totpsha1_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(HOTP.SHA_1));
-        writeOutput("/tmp/hotp_totpsha256_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(HOTP.SHA_256));
-        writeOutput("/tmp/hotp_totpsha512_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(HOTP.SHA_512));
+        writeOutput("/tmp/hotp_totpsha1_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(new Object[]{secret, HOTP.SHA_1}));
+        writeOutput("/tmp/hotp_totpsha256_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(new Object[]{secret, HOTP.SHA_256}));
+        writeOutput("/tmp/hotp_totpsha512_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(new Object[]{secret, HOTP.SHA_512}));
 
+        secret = "0".getBytes();
+
+        writeOutput("/tmp/hotp_totpsha1_unsecure_sec_i10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(new Object[]{secret, HOTP.SHA_1}));
+        writeOutput("/tmp/hotp_totpsha256__unsecure_seci10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(new Object[]{secret, HOTP.SHA_256}));
+        writeOutput("/tmp/hotp_totpsha512__unsecure_seci10000_" + System.currentTimeMillis() + ".csv", otpFn.apply(new Object[]{secret, HOTP.SHA_512}));
 
     }
 

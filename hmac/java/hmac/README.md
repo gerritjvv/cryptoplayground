@@ -46,3 +46,8 @@ see: https://alvinalexander.com/technology/gnuplot-charts-graphs-examples
 * hotp_test_data_1506613724374.csv  generated using secret "1234567890" and SHA-1
 
 
+## Other implementations
+
+Google Authenticator Open Sourced:
+
+https://github.com/google/google-authenticator-android/blob/master/AuthenticatorApp/src/main/java/com/google/android/apps/authenticator/PasscodeGenerator.java
