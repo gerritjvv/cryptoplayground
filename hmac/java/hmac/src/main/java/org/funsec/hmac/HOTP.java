@@ -1,10 +1,13 @@
 package org.funsec.hmac;
 
+import org.funsec.util.Bytes;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.function.LongSupplier;
 
 /**
  * Generate HOTP and TOTP values based on:
@@ -20,34 +23,46 @@ import java.time.Instant;
  * Digit size: Digits is by default 6, and can only be 0 ... 8 inclusively.
  * truncationOffset: The truncation offset by default is 0, if larger than 15, dyanamic truncation is used.<br/>
  */
-public class HOTP {
+public abstract class HOTP {
 
+
+    /**
+     * Every implementation of the Java platform is required to support SHA1
+     */
     public static final String SHA_1 = "HmacSHA1";
+
+    /**
+     * Every implementation of the Java platform is required to support SHA256
+     */
+    public static final String SHA_256 = "HmacSHA256";
+
+    /**
+     * All Java platforms are not required to implement HmacSHA512
+     */
+    public static final String SHA_512 = "HmacSHA512";
+
 
     private static final int[] DIGITS_POWER
             // 0 1  2   3    4     5      6       7        8
             = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
 
     /**
-     * Timebased one time password using:
-     * timeStep = 30 seconds,
-     * T0 = 0.
-     * Digit = 6,
-     * SHA-1.
+     * Calculate the one time password value from the HOTP implementation.
      */
-    public static final int totp(byte[] k) throws NoSuchAlgorithmException, InvalidKeyException {
-        return totp(k, 30);
-    }
+    public abstract int calcOtp(byte[] secret) throws InvalidKeyException, NoSuchAlgorithmException;
 
     /**
+     * Return a new unix time based one time password with,
+     *
+     * X=30, Digit = 6, truncationOffset = 0
      *
      */
-    public static final int totp(byte[] k, int timeStep) throws InvalidKeyException, NoSuchAlgorithmException {
-        return otp(k, Math.floorDiv(Instant.now().getEpochSecond(), timeStep));
+    public static HOTP newTOTPInstance(String shaAlgo) {
+        return newTOTPInstance(shaAlgo, 6, () -> Instant.now().getEpochSecond(), 30);
     }
 
-    public static final int otp(byte[] k, long counter) throws NoSuchAlgorithmException, InvalidKeyException {
-        return otp(k, counter, 6);
+    public static HOTP newTOTPInstance(String shaAlgo, int digits, LongSupplier seconds, int timeStep) {
+        return new TOTP(shaAlgo, digits, seconds, timeStep, -1);
     }
 
     public static final int otp(byte[] k, long counter, int digit) throws NoSuchAlgorithmException, InvalidKeyException {
@@ -58,15 +73,11 @@ public class HOTP {
         return truncate(hash(k, counter, hsAlgo), digit, truncationOffset);
     }
 
-    protected static byte[] hash(byte[] k, long counter) throws NoSuchAlgorithmException, InvalidKeyException {
-        return hash(k, counter, SHA_1);
-    }
-
     protected static byte[] hash(byte[] k, long counter, String hsAlgo) throws NoSuchAlgorithmException, InvalidKeyException {
         Mac mac = Mac.getInstance(hsAlgo);
         mac.init(new SecretKeySpec(k, "RAW"));
 
-        return mac.doFinal(longToBytes(counter));
+        return mac.doFinal(Bytes.longToBytes(counter));
     }
 
     protected static int truncate(byte[] hs, int digit, int truncationOffset) {
@@ -81,6 +92,7 @@ public class HOTP {
      * Changes from the original reference implementation:
      */
     protected static int dynamicTruncation(byte[] hs, int truncationOffset) {
+
         int offset;
 
         if (0 <= truncationOffset &&
@@ -100,18 +112,33 @@ public class HOTP {
     }
 
     /**
-     * https://docs.oracle.com/javase/7/docs/api/java/io/DataOutput.html
-     *
-     * @param v
+     * Wrapper for the TOTP implementation of HOTP
      */
-    private static byte[] longToBytes(long v) {
-        return new byte[]{(byte) (0xff & (v >> 56)),
-                (byte) (0xff & (v >> 48)),
-                (byte) (0xff & (v >> 40)),
-                (byte) (0xff & (v >> 32)),
-                (byte) (0xff & (v >> 24)),
-                (byte) (0xff & (v >> 16)),
-                (byte) (0xff & (v >> 8)),
-                (byte) (0xff & v)};
+    private static class TOTP extends HOTP {
+
+        private final String shaAlgo;
+        private final int truncationOffset;
+
+        private final LongSupplier seconds;
+        private final int timeStep;
+
+        private final int digits;
+
+        public TOTP(String shaAlgo, int digits, LongSupplier seconds, int timeStep, int truncationOffset) {
+            this.shaAlgo = shaAlgo;
+            this.digits = digits;
+            this.truncationOffset = truncationOffset;
+            this.seconds = seconds;
+            this.timeStep = timeStep;
+        }
+
+        @Override
+        public int calcOtp(byte[] secret) throws InvalidKeyException, NoSuchAlgorithmException {
+            return otp(secret,
+                    Math.floorDiv(seconds.getAsLong(), timeStep),
+                    digits,
+                    shaAlgo,
+                    truncationOffset);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package org.funsec.hmac;
 
+import org.funsec.util.Bytes;
 import org.junit.Test;
 
 import java.security.InvalidKeyException;
@@ -7,7 +8,7 @@ import java.security.NoSuchAlgorithmException;
 
 import static org.junit.Assert.assertEquals;
 
-public class HTOPTest {
+public class HOTPTest {
 
     private static final Object[][] TEST_DATA_SHA1_HASHES =
             {
@@ -91,7 +92,7 @@ public class HTOPTest {
 
     private void assertOTP(byte[] secret, int counter) throws NoSuchAlgorithmException, InvalidKeyException {
         int expected = (int) TEST_DATA_HOTP_VALUES[counter][3];
-        int given = HOTP.otp(secret, counter);
+        int given = HOTP.otp(secret, counter, 6);
 
         System.out.println("Match [" + counter + "] assertOTP: " + expected + " == " + given);
 
@@ -100,22 +101,12 @@ public class HTOPTest {
 
     private void assertHash(byte[] secret, int counter) throws NoSuchAlgorithmException, InvalidKeyException {
         String expected = (String) TEST_DATA_SHA1_HASHES[counter][1];
-        String given = bytesToHex(HOTP.hash(secret, counter));
+        String given = Bytes.bytesToHex(HOTP.hash(secret, counter, HOTP.SHA_1));
 
         System.out.println("Match hash: " + expected + " == " + given);
 
         assertEquals(expected, given);
 
     }
-
-
-    public static String bytesToHex(byte[] in) {
-        final StringBuilder builder = new StringBuilder();
-        for (byte b : in) {
-            builder.append(String.format("%02x", b));
-        }
-        return builder.toString();
-    }
-
 
 }

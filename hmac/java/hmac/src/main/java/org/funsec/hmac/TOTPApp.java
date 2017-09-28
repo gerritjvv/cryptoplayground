@@ -33,30 +33,40 @@ public class TOTPApp {
         }
     }
 
-    private static void runClient(byte[] secret) throws InvalidKeyException, NoSuchAlgorithmException, InterruptedException {
-        while(!Thread.interrupted()) {
+    private static HOTP readAlgo() {
+        System.out.println("Type in 0 = SHA1 [Default], 1 = SHA256, 2 = SHA512: ");
 
-            //this calc ensures we start at the 30 second boundaries
-            int drift = (int)Math.floorMod(Instant.now().getEpochSecond(), 30L);
-            int cnt = (30 - drift);
+        String line = console.readLine();
 
-            for(int i = 0; i < cnt; i++) {
+        int n = line == null || line.trim().length() == 0 ? 0 : Integer.parseInt(line.trim());
 
-                int token = HOTP.totp(secret);
-
-                System.out.print("\r");
-                System.out.print("                                                   ");
-                System.out.print('\r');
-                System.out.print(String.format("%06d", token));
-                System.out.print("  [ " + (cnt-(i+1)) + " ]");
-                System.out.flush();
-
-                Thread.sleep(1000);
-            }
-
-            System.out.println();
-
+        if (!(0 <= n && n <= 2)) {
+            throw new RuntimeException("A valid options of 0,1,2 must be selected");
         }
+
+
+        final String algo;
+
+        switch (n){
+            case 0:
+                algo = HOTP.SHA_1;
+                System.out.println("Using SHA1");
+                break;
+            case 1:
+                algo = HOTP.SHA_256;
+                System.out.println("Using SHA256");
+                break;
+            case 2:
+                algo = HOTP.SHA_512;
+                System.out.println("Using SHA512");
+                break;
+            default:
+                System.out.println("Invalid option chosen using defaul SHA1");
+                algo = HOTP.SHA_1;
+        }
+
+
+        return HOTP.newTOTPInstance(algo);
     }
 
     private static byte[] readSecret() {
@@ -90,11 +100,42 @@ public class TOTPApp {
         return Integer.parseInt(token);
     }
 
+    private static void runClient(byte[] secret) throws InvalidKeyException, NoSuchAlgorithmException, InterruptedException {
+
+        HOTP hotp = readAlgo();
+
+        while(!Thread.interrupted()) {
+
+            //this calc ensures we start at the 30 second boundaries
+            int drift = (int)Math.floorMod(Instant.now().getEpochSecond(), 30L);
+            int cnt = (30 - drift);
+
+            for(int i = 0; i < cnt; i++) {
+
+                int token = hotp.calcOtp(secret);
+
+                System.out.print("\r");
+                System.out.print("                                                   ");
+                System.out.print('\r');
+                System.out.print(String.format("%06d", token));
+                System.out.print("  [ " + (cnt-(i+1)) + " ]");
+                System.out.flush();
+
+                Thread.sleep(1000);
+            }
+
+            System.out.println();
+
+        }
+    }
+
     private static void runServer(byte[] secret) throws InvalidKeyException, NoSuchAlgorithmException {
+
+        HOTP hotp = readAlgo();
 
         while (!Thread.interrupted()) {
             int token = readToken();
-            int serverToken = HOTP.totp(secret);
+            int serverToken = hotp.calcOtp(secret);
 
             if(token != serverToken) {
                 throw new RuntimeException(serverToken + " does not match entered token " + token);
