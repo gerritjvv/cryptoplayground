@@ -131,6 +131,9 @@ public class HOTPRef {
             throws NoSuchAlgorithmException, InvalidKeyException {
         // put movingFactor value into text byte array
         String result = null;
+
+        long counter = movingFactor;
+
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
         byte[] text = new byte[8];
         for (int i = text.length - 1; i >= 0; i--) {
@@ -157,10 +160,16 @@ public class HOTPRef {
         if (addChecksum) {
             otp = (otp * 10) + calcChecksum(otp, codeDigits);
         }
+
+
+        System.out.println(counter + "," + Integer.toHexString(binary) + "," + binary + "," + otp);
+
         result = Integer.toString(otp);
         while (result.length() < digits) {
             result = "0" + result;
         }
+
+
         return result;
     }
 }

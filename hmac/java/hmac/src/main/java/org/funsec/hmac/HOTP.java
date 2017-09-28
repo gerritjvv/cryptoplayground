@@ -4,10 +4,12 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 
 /**
- * Generate HOTP values based on:
+ * Generate HOTP and TOTP values based on:
  * RFC: https://www.ietf.org/rfc/rfc4226.txt
+ * RFC: https://tools.ietf.org/html/rfc6238
  * https://docs.oracle.com/javase/7/docs/api/javax/crypto/Mac.html
  * <p/>
  * Modifications:<br/>
@@ -25,6 +27,24 @@ public class HOTP {
     private static final int[] DIGITS_POWER
             // 0 1  2   3    4     5      6       7        8
             = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000};
+
+    /**
+     * Timebased one time password using:
+     * timeStep = 30 seconds,
+     * T0 = 0.
+     * Digit = 6,
+     * SHA-1.
+     */
+    public static final int totp(byte[] k) throws NoSuchAlgorithmException, InvalidKeyException {
+        return totp(k, 30);
+    }
+
+    /**
+     *
+     */
+    public static final int totp(byte[] k, int timeStep) throws InvalidKeyException, NoSuchAlgorithmException {
+        return otp(k, Math.floorDiv(Instant.now().getEpochSecond(), timeStep));
+    }
 
     public static final int otp(byte[] k, long counter) throws NoSuchAlgorithmException, InvalidKeyException {
         return otp(k, counter, 6);

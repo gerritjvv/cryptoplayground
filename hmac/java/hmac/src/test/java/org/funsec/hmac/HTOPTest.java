@@ -46,21 +46,22 @@ public class HTOPTest {
                     {9, "2679dc69", 645520489, 520489}
             };
 
+
     /**
      * These are the actual values output by the HTOPRef reference implementation.
      */
     public static final Object[][] TEST_DATA_HOTP_VALUES =
             {
-                    {0, 755224},
-                    {1, 717529},
-                    {2, 868666},
-                    {3, 23335}, //023335 != 23335
-                    {4, 179456},
-                    {5, 490877},
-                    {6, 910469},
-                    {7, 467724},
-                    {8, 952310},
-                    {9, 719768}
+                    {0, "4c93cf18", 1284755224, 755224},
+                    {1, "75a48a19", 1973717529, 717529},
+                    {2, "bacb7fa", 195868666, 868666},
+                    {3, "66c28227", 1724023335, 23335}, //023335 != 23335
+                    {4, "2904c900", 688179456, 179456},
+                    {5, "237e783d", 595490877, 490877},
+                    {6, "3c9cd285", 1016910469, 910469},
+                    {7, "24fb960c", 620467724, 467724},
+                    {8, "1b3c89f6", 456952310, 952310},
+                    {9, "16374098", 372719768, 719768}
             };
 
 
@@ -68,6 +69,7 @@ public class HTOPTest {
 
     /**
      * This test shows that the original reference test values do not match to reference implementation.
+     *
      * @throws InvalidKeyException
      * @throws NoSuchAlgorithmException
      */
@@ -88,7 +90,7 @@ public class HTOPTest {
     }
 
     private void assertOTP(byte[] secret, int counter) throws NoSuchAlgorithmException, InvalidKeyException {
-        int expected = (int)TEST_DATA_HOTP_VALUES[counter][1];
+        int expected = (int) TEST_DATA_HOTP_VALUES[counter][3];
         int given = HOTP.otp(secret, counter);
 
         System.out.println("Match [" + counter + "] assertOTP: " + expected + " == " + given);
