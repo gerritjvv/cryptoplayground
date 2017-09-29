@@ -8,6 +8,7 @@ import java.security.*;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.TemporalAmount;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -154,16 +155,20 @@ public class TOTPApp {
     }
 
     private static byte[] readSecret() {
-        System.out.println("Type in a shared secret key (min 5 chars): ");
+
+        System.out.println("Type in a shared secret key ideally 20 bytes (33chars) (can only contain chars ABCDEFGHIJKLMNOPQRSTUVWXYZ234567): ");
 
         String secret = console.readLine();
 
-        if (secret == null || secret.length() < 5) {
+        if (secret == null) {
             throw new RuntimeException("A valid secret was not entered and must at least be 5 characters long");
         }
 
 
-        return secret.getBytes();
+        //for google authenticator compatibility we need to decode the typed string as Base32
+        byte[] bts = new org.apache.commons.codec.binary.Base32().decode(secret);
+        System.out.println("Using bytes: " + bts.length + " => " + Arrays.toString(bts));
+        return bts;
     }
 
 

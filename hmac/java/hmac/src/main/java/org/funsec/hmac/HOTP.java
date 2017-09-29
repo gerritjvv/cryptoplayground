@@ -74,6 +74,18 @@ public abstract class HOTP {
     }
 
     protected static byte[] hash(byte[] k, long counter, String hsAlgo) throws NoSuchAlgorithmException, InvalidKeyException {
+        /**
+         * Google authenticator
+         *  static String getCheckCode(String secret) throws GeneralSecurityException,
+         DecodingException {
+         final byte[] keyBytes = Base32String.decode(secret);
+         Mac mac = Mac.getInstance("HMACSHA1");
+         mac.init(new SecretKeySpec(keyBytes, ""));
+         PasscodeGenerator pcg = new PasscodeGenerator(mac);
+         return pcg.generateResponseCode(0L);
+         }
+         */
+
         Mac mac = Mac.getInstance(hsAlgo);
         mac.init(new SecretKeySpec(k, "RAW"));
 
