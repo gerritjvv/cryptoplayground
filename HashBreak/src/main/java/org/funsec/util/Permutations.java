@@ -3,6 +3,7 @@ package org.funsec.util;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.function.IntFunction;
 import java.util.function.ObjIntConsumer;
 
@@ -10,7 +11,7 @@ public class Permutations {
 
     public static void main(String arg[]) throws InterruptedException {
 //        printAlphabetInfo(4, "ABC".getBytes());
-        printAlphabetInfoSegment(3, "ABC".getBytes());
+//        printAlphabetInfoSegment(3, "ABC".getBytes());
 
         for(Split split : splitKeySpace(4, "ABC".getBytes())){
             System.out.println(split);
@@ -136,8 +137,11 @@ public class Permutations {
         splits.add(split);
 
 
+
+        BigInteger sizeLimitBig = new BigInteger(String.valueOf(sizeLimit));
+
         while (split.keyLen > 3 &&
-                (split.total.longValue() > sizeLimit) &&
+                (split.total.compareTo(sizeLimitBig) > 0) &&
                 splits.size() < splitLimit) {
 
             split = split.split();
@@ -209,6 +213,21 @@ public class Permutations {
     private static final void copy(int len, byte[] alphabet, byte[] word, int wordI, int[] index) {
         for (int i = wordI; i < len; i++)
             word[i] = alphabet[index[i]];
+    }
+
+    public static void shuffleArray(byte[] array)
+    {
+        int index;
+        byte temp;
+        Random random = new Random();
+
+        for (int i = array.length - 1; i > 0; i--)
+        {
+            index = random.nextInt(i + 1);
+            temp = array[index];
+            array[index] = array[i];
+            array[i] = temp;
+        }
     }
 
     /**

@@ -28,6 +28,15 @@ public class BruteForceOTPAttack {
 
     public static void main(String arg[]) throws InterruptedException {
 
+
+
+//        List<Permutations.Split> splits = Permutations.splitKeySpace(16, GoogleTOTP.ENCODE_TABLE);
+//        System.out.println("Splits: " + splits);
+//
+//        if(true )return;
+
+        System.out.println("Processors: " + Runtime.getRuntime().availableProcessors());
+
         ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()-2);
 
         int keyLen = 16;
@@ -52,8 +61,9 @@ public class BruteForceOTPAttack {
 
 
             if (count % 1000000 == 0 && count != 0) {
-                counter.lazySet(count);
-                System.err.println("Processed: " + count + " in " + (System.currentTimeMillis() - start) + "ms");
+                counter.accumulateAndGet(count, (a, b) -> a + b);
+
+                System.err.println("Processed: " + counter.get() + " in " + (System.currentTimeMillis() - start) + "ms");
             }
 
 
@@ -73,21 +83,22 @@ public class BruteForceOTPAttack {
             for(int a = 0; a < 32; a++) {
                 for(int b = 0; b < 32; b++) {
                     for(int c = 0; c < 32; c++) {
-                        for(int d = 0; d < 32; d++) {
-                            if(buff.length() != 0)
-                                buff.append(',');
+                        if(buff.length() != 0)
+                            buff.append(',');
 
-                            buff.append(i + ":" + a + ":" + b + ":" + c + ":" + d + ":");
-                        }
+                        buff.append(i + ":" + a + ":" + b + ":" + c);
                     }
                 }
             }
         }
 
-//        System.out.println(buff.toString());
-//        if(true) return;
 
-        splitAttack(exec, handler,keyLen, GoogleTOTP.ENCODE_TABLE, HOTP.SHA_1, buff.toString());
+        byte[] alphabet = Arrays.copyOf(GoogleTOTP.ENCODE_TABLE, GoogleTOTP.ENCODE_TABLE.length);
+
+        Permutations.shuffleArray(alphabet);
+
+        System.out.println("Alphabet: " + Arrays.toString(alphabet));
+        splitAttack(exec, handler,keyLen, alphabet, HOTP.SHA_1, buff.toString());
 
         exec.shutdown();
         exec.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
@@ -165,20 +176,21 @@ public class BruteForceOTPAttack {
         List<Permutations.SegmentIndexPath> indexes = Permutations.SegmentIndexPath.parsePath(splitpath);
 
         List<Permutations.Split> splits = Permutations.splitKeySpace(keyLen, alphabet);
-
-        byte[] word = new byte[splits.get(0).keyLen];
-
         System.out.println("Splits: " + splits);
-        System.out.println("Indexes: " + indexes);
+
+
+//        System.out.println("Indexes: " + indexes);
 
         for (Permutations.SegmentIndexPath coord : indexes) {
-//            exec.submit(() -> {
-//                try {
-                    runSplitAttackBuild(exec, handler, word, 0, splits, coord, shaAlgo);
-//                } catch (Throwable t) {
-//                    t.printStackTrace();
-//                }
-//            });
+            exec.submit(() -> {
+                try {
+
+                    byte[] word = new byte[splits.get(0).keyLen];
+                    runSplitAttackBuild(exec, handler, word, 0, splits, coord, alphabet);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            });
         }
     }
 
@@ -193,7 +205,7 @@ public class BruteForceOTPAttack {
      */
     private static void runSplitAttackBuild(ExecutorService exec,
                                             ObjIntConsumer<byte[]> handler,
-                                            byte[] word, int lvl, List<Permutations.Split> splits, Permutations.SegmentIndexPath coord, String shaAlgo) {
+                                            byte[] word, int lvl, List<Permutations.Split> splits, Permutations.SegmentIndexPath coord, byte[] alphabet) {
 
 
         Permutations.Split sp = splits.get(lvl);
@@ -201,30 +213,27 @@ public class BruteForceOTPAttack {
 
         if(coord.children.size() > 0) {
 
-            System.out.println("coordsize: > 0 :" + coord);
-
             for(Permutations.SegmentIndexPath childCoord : coord.children) {
-                runSplitAttackBuild(exec, handler, word, lvl+1, splits, childCoord, shaAlgo);
+                runSplitAttackBuild(exec, handler, word, lvl+1, splits, childCoord, alphabet);
             }
         } else {
-                runSplitAttackExec(exec, handler, word, lvl, sp, shaAlgo);
+                runSplitAttackExec(exec, handler, word, lvl, sp, alphabet);
         }
     }
 
     private static void runSplitAttackExec(ExecutorService exec,
                                            ObjIntConsumer<byte[]> handler,
-                                           byte[] word, final int lvl, Permutations.Split sp, String shaAlgo) {
-        System.out.println("Work: " + Arrays.toString(word));
+                                           byte[] word, final int lvl, Permutations.Split sp, byte[] alphabet) {
         for(int i = 0; i < sp.getColumnCount(); i++) {
 
-            final byte[] columnWord = Arrays.copyOf(word, word.length);
+            final byte[] columnWord = word;// Arrays.copyOf(word, word.length);
             columnWord[columnWord.length-1] = sp.getKEndConstant(i);
 
-            exec.submit(() -> {
+//            exec.submit(() -> {
 
-                Permutations.addAndCarry(columnWord, sp.keyLen-1, lvl, GoogleTOTP.ENCODE_TABLE, handler);
+                Permutations.addAndCarry(columnWord, sp.keyLen-1, lvl, alphabet, handler);
 
-            });
+//            });
         }
 
     }
