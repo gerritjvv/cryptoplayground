@@ -4,6 +4,15 @@ import java.security.SecureRandom;
 
 public class Utils {
 
+    public static String repeat(char ch, int len) {
+        StringBuilder buff = new StringBuilder();
+        for(int i = 0; i < len; i++) {
+            buff.append(ch);
+        }
+
+        return buff.toString();
+    }
+
     public static byte[] genRandomKey(int keyLen, byte[] encodeTable) {
         byte[] k = new byte[keyLen];
 
