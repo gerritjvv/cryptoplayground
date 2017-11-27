@@ -2,6 +2,7 @@ package org.funsec.util;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.function.IntFunction;
@@ -10,12 +11,12 @@ import java.util.function.ObjIntConsumer;
 public class Permutations {
 
     public static void main(String arg[]) throws InterruptedException {
-//        printAlphabetInfo(4, "ABC".getBytes());
+        printAlphabetInfo(4, "ABC".getBytes());
 //        printAlphabetInfoSegment(3, "ABC".getBytes());
 
-        for(Split split : splitKeySpace(4, "ABC".getBytes())){
-            System.out.println(split);
-        }
+//        for(Split split : splitKeySpace(4, "ABC".getBytes())){
+//            System.out.println(split);
+//        }
 
 /*
          keyLen:  4
@@ -176,7 +177,11 @@ public class Permutations {
      */
     public static void addAndCarry(byte[] word, int len, int wordI, byte[] alphabet, ObjIntConsumer<byte[]> handler) {
 
+        System.out.println("Permutations: " + Utils.asCharStr(word) + " len " + len + " wordI " + wordI);
+
+
         int[] index = new int[len];
+
         int q;
 
         int count = 0;
@@ -195,7 +200,7 @@ public class Permutations {
 
 
             for (int i = len - 1; ; i--) {
-                if (i < 0) return;
+                if (i < wordI) return;
 
                 q = index[i] + 1;
                 index[i] = q;
@@ -211,8 +216,9 @@ public class Permutations {
 
 
     private static final void copy(int len, byte[] alphabet, byte[] word, int wordI, int[] index) {
-        for (int i = wordI; i < len; i++)
+        for (int i = wordI; i < len; i++) {
             word[i] = alphabet[index[i]];
+        }
     }
 
     public static void shuffleArray(byte[] array)
