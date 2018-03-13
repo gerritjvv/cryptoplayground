@@ -1,0 +1,4 @@
+
+simplelogin {
+  org.cryptopg.jaas.SimpleLoginModule required debug=true;
+};
