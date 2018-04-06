@@ -1,0 +1,21 @@
+version: '2'
+services:
+    kdc.crypto.org:
+        build: ./kdc
+        image: kerberos
+        ports:
+                - 88:88   # KDC default port
+                - 749:749 # Admin server port
+                - 464:464 # Password change port
+                - 754:754 # kprop port
+        networks:
+                - crypto
+        volumes:
+                - kdc_var:/usr/local/var 
+volumes:
+        #see https://web.mit.edu/kerberos/krb5-1.15/doc/mitK5defaults.html#mitk5defaults
+        kdc_var:
+
+networks:
+        crypto:
+                driver: bridge

@@ -57,8 +57,10 @@ public class SimpleLogin {
         return (Callback[] callbacks) -> {
             for (Callback c : callbacks) {
                 if (c instanceof PasswordCallback) {
+                    //here we set the password to the password callback
                     ((PasswordCallback) c).setPassword(pwdCopy);
                 } else if (c instanceof TextInputCallback) {
+                    //here we set the user name to the text input callback
                     ((TextInputCallback) c).setText(userName);
                 }
             }
