@@ -35,6 +35,7 @@ RUN kadmin.local addprinc -pw $ADMIN_PWD root/admin@CRYPTO.ORG && \
     kadmin.local addprinc -pw $ADMIN_PWD admin/admin@CRYPTO.ORG && \
     kadmin.local addprinc -pw $ADMIN_PWD admin/kdc.crypto.org@CRYPTO.ORG && \
     kadmin.local addprinc -pw $ADMIN_PWD kadmin/kdc.crypto.org@CRYPTO.ORG && \
+    kadmin.local addprinc -pw dev1234 root/dev@CRYPTO.ORG && \
     kadmin.local listprincs 
     
 RUN touch /var/log/krb5kdc.log && \

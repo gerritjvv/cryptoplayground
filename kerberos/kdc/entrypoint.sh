@@ -9,4 +9,9 @@ chown syslog:adm /dev/xconsole
 
 rsyslogd
 krb5kdc
+
+kadmin.local addprinc -pw dev1234 root/dev@CRYPTO.ORG
+## export the dev keytab to a docker-compose shared volume, for use by dev.crypto.org
+kadmin.local ktadd -k /var/tabs/dev.keytab root/dev@CRYPTO.ORG
+
 kadmind -nofork

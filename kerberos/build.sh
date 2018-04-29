@@ -37,6 +37,12 @@ user_pwd_login() {
 }
 
 
+keytab_login() {
+ mvn package
+ devbash /root/dev/kdc-jaas/kdc-keytab-login.sh $@
+}
+
+
 CMD="$1"
 
 case $CMD in
@@ -55,6 +61,10 @@ case $CMD in
 	userpwdlogin)
 	    shift
 	    user_pwd_login $@
+	    ;;
+	keytablogin)
+	    shift
+	    keytab_login $@
 	    ;;
 	info)
 		info

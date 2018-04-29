@@ -14,6 +14,7 @@ services:
                 - crypto
         volumes:
                 - kdc_var:/usr/local/var
+                - kdc_tabs:/var/tabs
     dev.crypto.org:
         build: ./kdc-jaas
         image: dev
@@ -21,6 +22,7 @@ services:
         networks:
                 - crypto
         volumes:
+                - kdc_tabs:/var/tabs
                 - .:/root/dev
                 - ~/.m2:/root/.m2
 #    ldap.crypto.org:
@@ -64,6 +66,7 @@ services:
 volumes:
         #see https://web.mit.edu/kerberos/krb5-1.15/doc/mitK5defaults.html#mitk5defaults
         kdc_var:
+        kdc_tabs:
 
 networks:
         crypto:
