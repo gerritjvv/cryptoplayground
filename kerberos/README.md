@@ -42,4 +42,27 @@ this allows the kadmin client to talk to the kadmin daemon over the network
 krb5kdc
 kadmin
 
+# IMPORTANT
+
+The krb5kdc, kadmin, and kdb5_util applications use the KRB5_KDC_PROFILE and KRB5_CONFIG environment variables
+to locate the /etc/kdc.conf and /etc/krb5.conf files. 
+
+If these are not set the krb5kdc instance will start but will serve nothing and log nothing, an easy way
+to check is to see if there is a log file in /var/log/, if the configuration is read you should see a 
+krb5kdc.log file.
+
+See: https://web.mit.edu/kerberos/krb5-1.12/doc/admin/conf_files/kdc_conf.html#kdc-conf-5
+
+
+#KADMIN
+
+Remember that kadmin by default uses the principal <user>/admin@<realm>  this needs to be added by kadmin.local
+to allow the kadmin remote client to connect, otherwise specify the principal to use via the -p option
+
+
+#Errors and troubleshooting
+
+* kadmin: Cannot contact any KDC for realm 'CRYPTO.ORG' while initializing kadmin interface
+
+The kadmin server is not running
 

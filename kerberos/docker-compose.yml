@@ -2,7 +2,9 @@ version: '2'
 services:
     kdc.crypto.org:
         build: ./kdc
-        image: kerberos
+        image: kdc #becareful, the docker build will think the image name is the hostname during build
+        hostname: kdc
+        domainname: crypto.org
         ports:
                 - 88:88   # KDC default port
                 - 749:749 # Admin server port
@@ -11,7 +13,54 @@ services:
         networks:
                 - crypto
         volumes:
-                - kdc_var:/usr/local/var 
+                - kdc_var:/usr/local/var
+    dev.crypto.org:
+        build: ./kdc-jaas
+        image: dev
+        domainname: crypto.org
+        networks:
+                - crypto
+        volumes:
+                - .:/root/dev
+                - ~/.m2:/root/.m2
+#    ldap.crypto.org:
+#         image: osixia/openldap
+#         hostname: ldap
+#         domainname: crypto.org
+#         networks:
+#                 - crypto
+#    ldapadmin.crypto.org:
+#         image: osixia/phpldapadmin
+#         hostname: ldapadmin
+#         domainname: crypto.org
+#         networks:
+#                 - crypto
+#         depends_on:
+#                 - ldap.crypto.org
+#    freeradiusdb.crypto.org:
+#         image: mysql:latest
+#         hostname: freeradiusdb
+#         domainname: crypto.org
+#         environment:
+#                 MYSQL_ROOT_PASSWORD: root
+#                 MYSQL_DATABASE: freeradius
+#                 MYSQL_USER: freeradius
+#                 MYSQL_PASSWORD: freeradius
+#         networks:
+#                 - crypto
+#
+#    radius.crypto.org:
+#         image: tpdock/freeradius
+#         hostname: radius
+#         domainname: crypto.org
+#         environment:
+#                 RADIUS_LISTEN_IP: *
+#                 RADIUS_CLIENTS: secret@127.0.0.1
+#
+#         networks:
+#                 - crypto
+#         depends_on:
+#                 - freeradiusdb.crypto.org
 volumes:
         #see https://web.mit.edu/kerberos/krb5-1.15/doc/mitK5defaults.html#mitk5defaults
         kdc_var:
