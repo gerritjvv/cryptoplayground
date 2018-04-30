@@ -1,0 +1,9 @@
+
+kerberosUserPwdLogin {
+  com.sun.security.auth.module.Krb5LoginModule required debug=true doNotPrompt=false;
+};
+
+
+kerberosKeytabLogin {
+  com.sun.security.auth.module.Krb5LoginModule required doNotPrompt=true debug=true useKeyTab=true keyTab="/var/tabs/dev.keytab";
+};

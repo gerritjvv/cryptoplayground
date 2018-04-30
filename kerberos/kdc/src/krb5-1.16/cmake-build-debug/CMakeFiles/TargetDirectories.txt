@@ -1,0 +1,3 @@
+/Users/gvanvuuren/workspaces/cryptoplayground/kerberos/kdc/src/krb5-1.16/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/gvanvuuren/workspaces/cryptoplayground/kerberos/kdc/src/krb5-1.16/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/gvanvuuren/workspaces/cryptoplayground/kerberos/kdc/src/krb5-1.16/cmake-build-debug/CMakeFiles/krb5_1_16.dir
