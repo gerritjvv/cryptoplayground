@@ -65,3 +65,8 @@ kerberosKeytabLogin {
   com.sun.security.auth.module.Krb5LoginModule required doNotPrompt=true debug=true useKeyTab=true keyTab="/var/tabs/dev.keytab";
 };
 ```
+
+
+# Exmaples
+
+![KDCJAASEXample](https://github.com/gerritjvv/cryptoplayground/blob/master/kerberos/docs/kdcstartloginexample.gif)
