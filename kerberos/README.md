@@ -1,68 +1,67 @@
+# Kerberos KDC Playground
 
 
-stash_file:
-  
-The stash file is a local copy of the master key that resides in encrypted form on the KDC’s local disk. The stash file is used to authenticate the KDC to itself automatically before starting the kadmind and krb5kdc daemons (e.g., as part of the machine’s boot sequence)
-
-keytab file
-All Kerberos server machines need a keytab file to authenticate to the KDC. By default on UNIX-like systems this file is named DEFKTNAME. The keytab file is an local copy of the host’s key
-
-/etc/krb5.keytab
-
-kadmin ktadd  host/trillium.mit.edu ftp/trillium.mit.edu
+## Overview
 
 
-application server
+Kerberos requires correct DNS setup and configuration, for this reason everything from the client to the KDC should run inside
+the docker-compose environment.
 
-An application server is a host that provides one or more services over the network
+The docker-compose specifies 2 main services:
 
+* kdc.crypto.org => Kerberos Key distribution centre (KDC)
+* dev.crypto.org => dev machine to connect to the KDC
 
-CREATE KDC DB and stash file
+A helper script build.sh is provided to automate running docker-compose commands for each usecase.
 
-The docker instance is installed by default with a db "abc1234"
+### Build.sh Commands
 
-1. kdb5_util create -r CRYPTO.ORG -s or kdb5_util create -r CRYPTO.ORG -s -P abc1234
-
-2. add the administrator principal (in the example root) to the kadm5.conf
-
-/usr/local/var/krb5kdc/kadm5.acl
-*/root@CRYPTO.ORG  l *  
-
-see: https://web.mit.edu/kerberos/krb5-1.15/doc/admin/conf_files/kadm5_acl.html#kadm5-acl-5
-
-
-2. add admin principal to kerberos database
-    kadmin.local addprinc -pw $ADMIN_PWD admin/admin@CRYPTO.ORG && \
-
-this allows the kadmin client to talk to the kadmin daemon over the network
+* start/stop, start stop the docker-compose instances
+* kdcbash, log into the kdc instance
+* devbash, log into the dev instance
+* build/devbuild, build the docker instances
+* userpwdlogin, run the user pwd login example in kdc-jaas/kdc-userpwd-login.sh
+* keytablogin, run the keytab login example in kdc-jaas/kdc-keytab-login.sh
 
 
-3. startup
+## Getting started
 
-krb5kdc
-kadmin
-
-# IMPORTANT
-
-The krb5kdc, kadmin, and kdb5_util applications use the KRB5_KDC_PROFILE and KRB5_CONFIG environment variables
-to locate the /etc/kdc.conf and /etc/krb5.conf files. 
-
-If these are not set the krb5kdc instance will start but will serve nothing and log nothing, an easy way
-to check is to see if there is a log file in /var/log/, if the configuration is read you should see a 
-krb5kdc.log file.
-
-See: https://web.mit.edu/kerberos/krb5-1.12/doc/admin/conf_files/kdc_conf.html#kdc-conf-5
+From the command line run: ```./build.sh build```, this might take a while.
+Then run ```./build.sh start```
 
 
-#KADMIN
+## Add and List KDC Principals (like adding users)
 
-Remember that kadmin by default uses the principal <user>/admin@<realm>  this needs to be added by kadmin.local
-to allow the kadmin remote client to connect, otherwise specify the principal to use via the -p option
+Form the command line run:
+```./build kdcbash```
 
+To see the existing principals run:
+```kadmin.local listprincs```
 
-#Errors and troubleshooting
+Then add a principal:
+```kamdin.local addprinc testuser/dev@crypto.org```
 
-* kadmin: Cannot contact any KDC for realm 'CRYPTO.ORG' while initializing kadmin interface
+To extract a keytab (for passwordless auth) run:
+```kadmin.local ktadd -k /var/tabs/mydev.keytab testuser/dev@CRYPTO.ORG```
 
-The kadmin server is not running
+## Run the kdc-jaas examples
 
+```./build.sh userpwdlogin testuser/dev@CRYPTO.ORG```
+
+```./build.sh keytablogin root/dev@CRYPTO.ORG```
+
+The userpwd login uses:
+
+```
+kerberosUserPwdLogin {
+  com.sun.security.auth.module.Krb5LoginModule required debug=true doNotPrompt=false;
+};
+```
+
+The keytab login uses:
+
+```
+kerberosKeytabLogin {
+  com.sun.security.auth.module.Krb5LoginModule required doNotPrompt=true debug=true useKeyTab=true keyTab="/var/tabs/dev.keytab";
+};
+```

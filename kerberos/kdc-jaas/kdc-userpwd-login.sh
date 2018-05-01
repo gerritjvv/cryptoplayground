@@ -4,9 +4,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd "$DIR"
-#mvn install
+mvn install
 
-echo "$DIR/target/kdc-jaas-1.0-SNAPSHOT.jar"
 java -cp "$DIR/target/kdc-jaas-1.0-SNAPSHOT.jar" \
      -Dsun.security.krb5.debug=true \
      -Dsun.security.jgss.debug=true \

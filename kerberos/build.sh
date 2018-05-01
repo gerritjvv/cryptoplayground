@@ -32,13 +32,11 @@ devbash() {
 }
 
 user_pwd_login() {
- mvn package
  devbash /root/dev/kdc-jaas/kdc-userpwd-login.sh $@
 }
 
 
 keytab_login() {
- mvn package
  devbash /root/dev/kdc-jaas/kdc-keytab-login.sh $@
 }
 
@@ -76,6 +74,6 @@ case $CMD in
 		stop
 		;;
 	*)
-		echo "Please type start|stop|kdcbash|devbash|build|devbuild|info"
+		echo "Please type start|stop|kdcbash|devbash|build|devbuild|info|userpwdlogin|keytablogin"
 		;;
 esac 
